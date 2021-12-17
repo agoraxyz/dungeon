@@ -50,7 +50,7 @@ const InfoMenu = () => {
             py="2"
             as="a"
             target="_blank"
-            href="https://github.com/AgoraSpaceDAO/frontend-boilerplate"
+            href="https://github.com/agoraxyz/dungeon"
             rel="noopener"
             icon={<Code />}
           >
