@@ -12,7 +12,7 @@ export default class Maze extends Component<IProps, IState> {
   constructor(props: IProps) {
     super(props)
     this.state = {
-      mazeBuilder: new MazeBuilder(4, 4, "seed"),
+      mazeBuilder: new MazeBuilder(4, 4, "seed2"),
     }
     this.logMaze = this.logMaze.bind(this)
     this.moveNorth = this.moveNorth.bind(this)
@@ -91,7 +91,6 @@ export default class Maze extends Component<IProps, IState> {
   }
 
   handleKeyPress(e) {
-    console.log("pressed key")
     if (e.key === "w") {
       this.moveNorth()
     } else if (e.key === "s") {

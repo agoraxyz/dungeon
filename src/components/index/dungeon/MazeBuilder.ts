@@ -64,72 +64,59 @@ export default class MazeBuilder {
     return JSON.parse(JSON.stringify(this._map))
   }
 
-  public moveNorth(): Map {
-    const maze = this.map
-    const [r, c] = this.find("hero")
-    if (r < 1) {
-      return maze
-    }
-    const locationCell = maze[r][c]
-    const targetCell = maze[r - 1][c]
-    if (targetCell.includes("wall")) {
-      return maze
-    }
-    locationCell.splice(locationCell.indexOf("hero"), 1)
-    targetCell.push("hero")
-    this._map = maze
-    return maze
+  public moveNorth() {
+    this.move("north")
   }
 
-  public moveSouth(): Map {
-    const maze = this.map
-    const [r, c] = this.find("hero")
-    if (r > this.rows - 2) {
-      return maze
-    }
-    const locationCell = maze[r][c]
-    const targetCell = maze[r + 1][c]
-    if (targetCell.includes("wall")) {
-      return maze
-    }
-    locationCell.splice(locationCell.indexOf("hero"), 1)
-    targetCell.push("hero")
-    this._map = maze
-    return maze
+  public moveSouth() {
+    this.move("south")
   }
 
-  public moveWest(): Map {
-    const maze = this.map
-    const [r, c] = this.find("hero")
-    if (c < 1) {
-      return maze
-    }
-    const locationCell = maze[r][c]
-    const targetCell = maze[r][c - 1]
-    if (targetCell.includes("wall")) {
-      return maze
-    }
-    locationCell.splice(locationCell.indexOf("hero"), 1)
-    targetCell.push("hero")
-    this._map = maze
-    return maze
+  public moveWest() {
+    this.move("west")
   }
 
-  public moveEast(): Map {
-    const maze = this.map
+  public moveEast() {
+    this.move("east")
+  }
+
+  private move(direction: string) {
     const [r, c] = this.find("hero")
-    if (c > this.cols - 2) {
-      return maze
+
+    let tr: number, tc: number
+    switch (direction) {
+      case "north":
+        tr = r - 1
+        tc = c
+        break
+      case "south":
+        tr = r + 1
+        tc = c
+        break
+      case "west":
+        tr = r
+        tc = c - 1
+        break
+      case "east":
+        tr = r
+        tc = c + 1
+        break
+      default:
+        tr = r
+        tc = c
     }
-    const locationCell = maze[r][c]
-    const targetCell = maze[r][c + 1]
+    if (!this.inBounds(tr, tc)) {
+      return
+    }
+    const _map = this.map
+    const locationCell = _map[r][c]
+    const targetCell = _map[tr][tc]
     if (targetCell.includes("wall")) {
-      return maze
+      return
     }
     locationCell.splice(locationCell.indexOf("hero"), 1)
     targetCell.push("hero")
-    this._map = maze
-    return maze
+    this._map = _map
   }
 
   private initArray(value: string[]) {
@@ -161,7 +148,6 @@ export default class MazeBuilder {
   }
 
   private shuffle(array: boolean[]) {
-    // sauce: https://stackoverflow.com/a/12646864
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(this.random() * (i + 1))
       ;[array[i], array[j]] = [array[j], array[i]]
@@ -207,27 +193,27 @@ export default class MazeBuilder {
       }
     }
 
-    let gaps = this.shuffle([true, true, true, false])
+    const gaps = this.shuffle([true, true, true, false])
 
     // create gaps in partition walls
 
     if (gaps[0]) {
-      let gapPosition = this.rand(c1, vert)
+      const gapPosition = this.rand(c1, vert)
       this._map[this.posToWall(horiz)][this.posToSpace(gapPosition)] = []
     }
 
     if (gaps[1]) {
-      let gapPosition = this.rand(vert + 1, c2 + 1)
+      const gapPosition = this.rand(vert + 1, c2 + 1)
       this._map[this.posToWall(horiz)][this.posToSpace(gapPosition)] = []
     }
 
     if (gaps[2]) {
-      let gapPosition = this.rand(r1, horiz)
+      const gapPosition = this.rand(r1, horiz)
       this._map[this.posToSpace(gapPosition)][this.posToWall(vert)] = []
     }
 
     if (gaps[3]) {
-      let gapPosition = this.rand(horiz + 1, r2 + 1)
+      const gapPosition = this.rand(horiz + 1, r2 + 1)
       this._map[this.posToSpace(gapPosition)][this.posToWall(vert)] = []
     }
 
