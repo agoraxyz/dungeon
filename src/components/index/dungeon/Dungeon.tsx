@@ -12,6 +12,7 @@ import {
   Text,
 } from "@chakra-ui/react"
 import { Component } from "react"
+import Maze from "./Maze"
 import * as types from "./types"
 
 interface IProps {}
@@ -129,10 +130,13 @@ export default class Dungeon extends Component<IProps, IState> {
   render() {
     return (
       <Box display="flex" alignItems="flex-start">
-        <Box>{this.showHero()}</Box>
-        <Box>
+        {/* <Box>{this.showHero()}</Box> */}
+        {/* <Box>
           <Heading size="lg">Actions</Heading>
           <ol>{this.showActions()}</ol>
+        </Box> */}
+        <Box>
+          <Maze />
         </Box>
       </Box>
     )
