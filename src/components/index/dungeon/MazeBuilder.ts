@@ -1,5 +1,6 @@
 // Original JavaScript code by Chirp Internet: chirpinternet.eu
 // Please acknowledge use of this code by including this header.
+import seedrandom from "seedrandom"
 
 export type Map = string[][][]
 
@@ -8,12 +9,14 @@ export default class MazeBuilder {
   private height: number
   private cols: number
   private rows: number
+  private random: any
 
   private _map: Map
 
-  constructor(width: number, height: number) {
+  constructor(width: number, height: number, seed: string) {
     this.width = width
     this.height = height
+    this.random = seedrandom(seed)
 
     this.cols = 2 * this.width + 1
     this.rows = 2 * this.height + 1
@@ -136,7 +139,7 @@ export default class MazeBuilder {
   }
 
   private rand(min: number, max: number) {
-    return min + Math.floor(Math.random() * (1 + max - min))
+    return min + Math.floor(this.random() * (1 + max - min))
   }
 
   private posToSpace(x: number) {
@@ -160,7 +163,7 @@ export default class MazeBuilder {
   private shuffle(array: boolean[]) {
     // sauce: https://stackoverflow.com/a/12646864
     for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
+      const j = Math.floor(this.random() * (i + 1))
       ;[array[i], array[j]] = [array[j], array[i]]
     }
     return array

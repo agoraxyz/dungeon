@@ -1,5 +1,5 @@
-import { Component } from "react"
 import { Box } from "@chakra-ui/react"
+import { Component } from "react"
 import MazeBuilder from "./MazeBuilder"
 
 interface IProps {}
@@ -12,7 +12,7 @@ export default class Maze extends Component<IProps, IState> {
   constructor(props: IProps) {
     super(props)
     this.state = {
-      mazeBuilder: new MazeBuilder(4, 4),
+      mazeBuilder: new MazeBuilder(4, 4, "seed"),
     }
     this.logMaze = this.logMaze.bind(this)
     this.moveNorth = this.moveNorth.bind(this)
