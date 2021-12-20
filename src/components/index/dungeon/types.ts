@@ -21,6 +21,10 @@ export enum CreatureType {
   Dragon = 20,
 }
 
+export type Item = {
+  name: string
+}
+
 export type CreatureAttributes = {
   attack: number
   defense: number
@@ -51,4 +55,10 @@ export type Hero = {
   name: string
   isAlive: boolean
   xp: number
+}
+
+export type Thing = {
+  creature?: Creature
+  item?: Item
+  path?: boolean
 }

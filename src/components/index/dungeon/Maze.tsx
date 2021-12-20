@@ -12,7 +12,12 @@ export default class Maze extends Component<IProps, IState> {
   constructor(props: IProps) {
     super(props)
     this.state = {
-      mazeBuilder: new MazeBuilder(4, 4, "seed2"),
+      mazeBuilder: new MazeBuilder(
+        4,
+        4,
+        [{ path: true }, { path: false }],
+        [["south", 11]]
+      ),
     }
     this.logMaze = this.logMaze.bind(this)
     this.moveNorth = this.moveNorth.bind(this)
@@ -62,7 +67,6 @@ export default class Maze extends Component<IProps, IState> {
   }
 
   renderMaze() {
-    console.log("rendering maze")
     const maze = this.state.mazeBuilder.map
     const board = []
     for (let i = 0; i < maze.length; i++) {
@@ -70,15 +74,15 @@ export default class Maze extends Component<IProps, IState> {
       for (let j = 0; j < maze[i].length; j++) {
         const cell = maze[i][j]
         if (cell.length === 0) {
-          row.push(<Box key={j} bg="gray.300" w="50px" h="50px" />)
+          row.push(<Box key={j} bg="gray.300" w="20px" h="20px" />)
         } else if (cell.includes("wall")) {
-          row.push(<Box key={j} bg="yellow.900" w="50px" h="50px" />)
+          row.push(<Box key={j} bg="yellow.900" w="20px" h="20px" />)
         } else if (cell.includes("hero")) {
-          row.push(<Box key={j} bg="blue.300" w="50px" h="50px" />)
+          row.push(<Box key={j} bg="blue.300" w="20px" h="20px" />)
         } else if (cell.includes("door")) {
-          row.push(<Box key={j} bg="green.300" w="50px" h="50px" />)
+          row.push(<Box key={j} bg="green.300" w="20px" h="20px" />)
         } else {
-          row.push(<Box key={j} bg="red.300" w="50px" h="50px" />)
+          row.push(<Box key={j} bg="red.300" w="20px" h="20px" />)
         }
       }
       board.push(

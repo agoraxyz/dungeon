@@ -1,8 +1,11 @@
 // Original JavaScript code by Chirp Internet: chirpinternet.eu
 // Please acknowledge use of this code by including this header.
 import seedrandom from "seedrandom"
+import * as types from "./types"
 
 export type Map = string[][][]
+export type loc = [row: number, col: number]
+export type Path = [direction: string, place: number]
 
 export default class MazeBuilder {
   private width: number
@@ -10,13 +13,17 @@ export default class MazeBuilder {
   private cols: number
   private rows: number
   private random: any
+  private things: types.Thing[]
+  private paths: Path[]
 
   private _map: Map
 
-  constructor(width: number, height: number, seed: string) {
+  constructor(width: number, height: number, things: types.Thing[], paths: Path[]) {
     this.width = width
     this.height = height
-    this.random = seedrandom(seed)
+    this.random = seedrandom("asd")
+    this.things = things
+    this.paths = paths
 
     this.cols = 2 * this.width + 1
     this.rows = 2 * this.height + 1
@@ -42,22 +49,14 @@ export default class MazeBuilder {
             }
         }
       })
-
-      if (r == 0) {
-        // place exit in top row
-        let doorPos = this.posToSpace(this.rand(1, this.width))
-        this._map[r][doorPos] = ["door", "exit"]
-      }
-
-      if (r == this.rows - 1) {
-        // place entrance in bottom row
-        let doorPos = this.posToSpace(this.rand(1, this.width))
-        this._map[r][doorPos] = ["door", "entrance", "hero"]
-      }
     })
 
     // start partitioning
     this.partition(1, this.height - 1, 1, this.width - 1)
+    this.scale(3)
+    this.placeLadderAndHero()
+    this.placeThings()
+    this.placePaths()
   }
 
   public get map() {
@@ -225,9 +224,174 @@ export default class MazeBuilder {
     this.partition(horiz + 1, r2, vert + 1, c2)
   }
 
+  private scale(times = 2) {
+    const _map = []
+    for (let i = 0; i < this.rows; i++) {
+      const row = []
+      for (let j = 0; j < this.cols; j++) {
+        row.push(JSON.parse(JSON.stringify(this._map[i][j])))
+        if (j !== 0 && j !== this.cols - 1) {
+          for (let k = 1; k < times; k++) {
+            row.push(JSON.parse(JSON.stringify(this._map[i][j])))
+          }
+        }
+      }
+      _map.push(JSON.parse(JSON.stringify(row)))
+      if (i !== 0 && i !== this.rows - 1) {
+        for (let k = 1; k < times; k++) {
+          _map.push(JSON.parse(JSON.stringify(row)))
+        }
+      }
+    }
+    this._map = _map
+  }
+
+  private placeLadderAndHero() {
+    while (true) {
+      const row = this.rand(0, Math.floor(this._map.length - 1))
+      const col = this.rand(0, Math.floor(this._map[0].length - 1))
+      const cell = this._map[row][col]
+      if (!cell.includes("wall")) {
+        cell.push("ladder")
+        cell.push("hero")
+        break
+      }
+    }
+  }
+
+  private placeThings() {
+    for (const thing of this.things) {
+      let row: number, col: number
+      if (thing.path) {
+        ;[row, col] = this.getRandomEdge("north")
+        this._map[row][col].splice(this._map[row][col].indexOf("wall"), 1)
+      } else {
+        ;[row, col] = this.getRandomCorner()
+      }
+      this._map[row][col].push("thing")
+    }
+  }
+
+  private getRandomCorner() {
+    while (true) {
+      const row = this.rand(0, Math.floor(this._map.length - 1))
+      const col = this.rand(0, Math.floor(this._map[0].length - 1))
+      const cell = this._map[row][col]
+      if (cell.length === 0) {
+        let wallCount = 0
+        const nw = this._map[row - 1][col - 1]
+        const n = this._map[row - 1][col]
+        const ne = this._map[row - 1][col + 1]
+        const w = this._map[row][col - 1]
+        const e = this._map[row][col + 1]
+        const sw = this._map[row + 1][col - 1]
+        const s = this._map[row + 1][col]
+        const se = this._map[row + 1][col + 1]
+
+        if (n.includes("wall") && s.includes("wall")) continue
+        if (w.includes("wall") && e.includes("wall")) continue
+
+        if (nw.includes("wall")) wallCount += 1
+        if (n.includes("wall")) wallCount += 1
+        if (ne.includes("wall")) wallCount += 1
+        if (w.includes("wall")) wallCount += 1
+        if (e.includes("wall")) wallCount += 1
+        if (sw.includes("wall")) wallCount += 1
+        if (s.includes("wall")) wallCount += 1
+        if (se.includes("wall")) wallCount += 1
+        if (wallCount >= 5) {
+          return [row, col]
+        }
+      }
+    }
+  }
+
+  private getRandomEdge(direction: string) {
+    while (true) {
+      let row, col, nextRow, nextCol
+      if (direction === "north") {
+        row = 0
+        col = this.rand(0, this._map[0].length - 1)
+        nextRow = 1
+        nextCol = col
+      } else if (direction === "south") {
+        row = this.rows - 1
+        col = this.rand(0, this._map[0].length - 1)
+        nextRow = row - 1
+        nextCol = col
+      } else if (direction === "west") {
+        row = this.rand(0, this._map.length - 1)
+        col = 0
+        nextRow = row
+        nextCol = 1
+      } else if (direction === "east") {
+        row = this.rand(0, this._map.length - 1)
+        col = this.cols - 1
+        nextRow = row
+        nextCol = col - 1
+      }
+      if (
+        this._map[row][col].includes("wall") &&
+        !this._map[nextRow][nextCol].includes("wall")
+      ) {
+        return [row, col]
+      }
+    }
+  }
+
+  private placePaths() {
+    for (const path of this.paths) {
+      this.carvePath(path)
+    }
+  }
+
+  private carvePath(path: Path) {
+    const [direction, place] = path
+    let nextRow, nextCol, row, col
+    switch (direction) {
+      case "north":
+        nextRow = 1
+        nextCol = 0
+        row = 0
+        col = place
+        break
+      case "south":
+        nextRow = -1
+        nextCol = 0
+        row = this._map.length - 1
+        col = place
+        break
+      case "west":
+        nextRow = 0
+        nextCol = 1
+        row = place
+        col = 0
+        break
+      case "east":
+        nextRow = 0
+        nextCol = -1
+        row = place
+        col = this._map[0].length - 1
+        break
+      default:
+        break
+    }
+    let cell = this._map[row][col]
+    cell.splice(cell.indexOf("wall"), 1)
+    while (true) {
+      cell = this._map[row + nextRow][col + nextCol]
+      if (!cell.includes("wall")) {
+        break
+      }
+      cell.splice(cell.indexOf("wall"), 1)
+      row += nextRow
+      col += nextCol
+    }
+  }
+
   private find(item: string): [number, number] {
-    for (let r = 0; r < this.rows; r++) {
-      for (let c = 0; c < this.cols; c++) {
+    for (let r = 0; r < this._map.length; r++) {
+      for (let c = 0; c < this._map[0].length; c++) {
         if (this._map[r][c].includes(item)) {
           return [r, c]
         }
