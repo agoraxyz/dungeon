@@ -36,6 +36,22 @@ const dummyThings: types.DungeonThing[] = [
     health: 1,
     size: 1,
   },
+  {
+    type: "guarded",
+    ladder: true,
+    guard: {
+      type: "creature",
+      kind: types.CreatureType.Medusa,
+      attr: {
+        attack: 1,
+        defense: 1,
+        hitpoints: 1,
+        damage: { min: 1, max: 1 },
+      },
+      health: 1,
+      size: 1,
+    },
+  },
 ]
 
 // TODO place stuff in addChamber
@@ -55,7 +71,6 @@ type ChamberParams = {
 }
 
 type ThingOnMap = {
-  index: number
   name: string
   row: number
   col: number
@@ -179,8 +194,11 @@ export default class Level {
       startCol = col
     }
 
+    let nextPassageCoords: Coords | undefined = undefined
     if (this.guardsPassage(things)) {
-      const nextPassage: Passage = ["south", 13, this.getRandom(0, C_COLS - 1)]
+      const [row, col] = [C_ROWS - 1, this.getRandom(0, C_COLS - 1)]
+      const nextPassage: Passage = ["south", row, col]
+      nextPassageCoords = [row, col]
       passages.push(nextPassage)
     }
 
@@ -202,6 +220,8 @@ export default class Level {
     if (isFirstChamber) {
       this.placeEntranceAndHero(startRow, startCol, C_ROWS, C_COLS)
     }
+
+    this.addThings(things, startRow, startCol, nextPassageCoords)
   }
 
   private getReversePassage(passage: Passage): Passage {
@@ -267,6 +287,85 @@ export default class Level {
     }
   }
 
+  private addThings(
+    things: types.DungeonThing[],
+    startRow: number,
+    startCol: number,
+    nextPassageCoords?: Coords
+  ) {
+    const _things: types.DungeonThing[] = JSON.parse(JSON.stringify(things))
+
+    // add the passage guard first because it has to have a fixed location
+    if (nextPassageCoords) {
+      const guardIndex = _things.findIndex((t) => t.type === "guarded" && t.passage)
+      this.dungeonThings.push(_things[guardIndex])
+      _things.splice(guardIndex, 1)
+      const [row, col] = nextPassageCoords
+      this._map[row + startRow][col + startCol].push("creature")
+      this.thingsOnMap.push({
+        row: row + startRow,
+        col: col + startCol,
+        name: "creature",
+      })
+    }
+
+    for (const thing of _things) {
+      if (thing.type === "dungeonObj" || thing.type === "creature") {
+        let count = 0
+        while (true) {
+          count += 1
+          if (count > 2000) throw Error("Could not place dungeon object")
+          const row = this.getRandom(startRow, startRow + C_ROWS)
+          const col = this.getRandom(startCol, startCol + C_COLS)
+          if (!this.checkNothingNearby(row, col)) continue
+
+          // TODO rename objects and creatures to their type
+          const name = thing.type === "dungeonObj" ? "obj" : "creature"
+          this._map[row][col].push(name)
+          this.thingsOnMap.push({
+            row,
+            col,
+            name,
+          })
+          this.dungeonThings.push(thing)
+          break
+        }
+      } else if (thing.type === "guarded") {
+        let count = 0
+        while (true) {
+          count += 1
+          if (count > 200) throw Error("Could not place dungeon object")
+          const row = this.getRandom(startRow, startRow + C_ROWS)
+          const col = this.getRandom(startCol, startCol + C_COLS)
+          const wallCoords = this.getWallCordsIfNextToWall(row, col)
+          if (!wallCoords) continue
+          if (!this.checkNothingNearby(row, col)) continue
+
+          const [wallRow, wallCol] = wallCoords
+          const wall = this._map[wallRow][wallCol]
+          const guardedName = thing.ladder ? "ladder" : "obj"
+          wall.pop()
+          wall.push(guardedName)
+          this.thingsOnMap.push({
+            row: wallRow,
+            col: wallCol,
+            name: guardedName,
+          })
+
+          const cell = this._map[row][col]
+          cell.push("creature")
+          this.thingsOnMap.push({
+            row,
+            col,
+            name: "creature",
+          })
+          this.dungeonThings.push(thing)
+          break
+        }
+      }
+    }
+  }
+
   private checkNeighborsEmpty(row: number, col: number) {
     const nw = this._map[row - 1][col - 1].length === 0
     const n = this._map[row - 1][col].length === 0
@@ -277,6 +376,55 @@ export default class Level {
     const s = this._map[row + 1][col].length === 0
     const se = this._map[row + 1][col + 1].length === 0
     return nw && n && ne && w && e && sw && s && se
+  }
+
+  private checkNothingNearby(row: number, col: number) {
+    for (let i = -3; i <= 3; i++) {
+      for (let j = -3; j <= 3; j++) {
+        if (!this._map[row + i] || !this._map[row + i][col + j]) {
+          continue
+        }
+        if (i === 0 && j === 0 && this._map[row + i][col + j].length !== 0) {
+          return false
+        }
+        if (
+          this._map[row + i][col + j].length !== 0 &&
+          !this._map[row + i][col + j].includes("wall")
+        ) {
+          return false
+        }
+      }
+    }
+    return true
+  }
+
+  private getWallCordsIfNextToWall(row: number, col: number) {
+    if (
+      !this._map[row] ||
+      !this._map[row][col] ||
+      this._map[row][col].length !== 0
+    ) {
+      return undefined
+    }
+    const nw = this._map[row - 1][col - 1].includes("wall")
+    const n = this._map[row - 1][col].includes("wall")
+    const ne = this._map[row - 1][col + 1].includes("wall")
+    const w = this._map[row][col - 1].includes("wall")
+    const e = this._map[row][col + 1].includes("wall")
+    const sw = this._map[row + 1][col - 1].includes("wall")
+    const s = this._map[row + 1][col].includes("wall")
+    const se = this._map[row + 1][col + 1].includes("wall")
+    if (nw && n && ne) {
+      return [row - 1, col]
+    } else if (nw && w && sw) {
+      return [row, col - 1]
+    } else if (ne && e && se) {
+      return [row, col + 1]
+    } else if (sw && s && se) {
+      return [row + 1, col]
+    } else {
+      return undefined
+    }
   }
 
   private getRandomCorner() {
