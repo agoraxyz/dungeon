@@ -5,16 +5,16 @@ import * as types from "./types"
 
 export type Map = string[][][]
 export type loc = [row: number, col: number]
-export type Path = [direction: string, place: number]
+export type Path = [direction: string, place: number, row: number, col: number]
 
-export default class MazeBuilder {
+export default class Chamber {
   private width: number
   private height: number
   private cols: number
   private rows: number
   private random: any
   private things: types.Thing[]
-  private paths: Path[]
+  private _paths: Path[]
 
   private _map: Map
 
@@ -23,7 +23,7 @@ export default class MazeBuilder {
     this.height = height
     this.random = seedrandom("asd")
     this.things = things
-    this.paths = paths
+    this._paths = paths
 
     this.cols = 2 * this.width + 1
     this.rows = 2 * this.height + 1
@@ -53,7 +53,7 @@ export default class MazeBuilder {
 
     // start partitioning
     this.partition(1, this.height - 1, 1, this.width - 1)
-    this.scale(3)
+    this.scale(4)
     this.placeLadderAndHero()
     this.placeThings()
     this.placePaths()
@@ -61,6 +61,18 @@ export default class MazeBuilder {
 
   public get map() {
     return JSON.parse(JSON.stringify(this._map))
+  }
+
+  public get paths() {
+    return JSON.parse(JSON.stringify(this._paths))
+  }
+
+  public getRows() {
+    return this._map.length
+  }
+
+  public getCols() {
+    return this._map[0].length
   }
 
   public moveNorth() {
@@ -265,6 +277,7 @@ export default class MazeBuilder {
       if (thing.path) {
         ;[row, col] = this.getRandomEdge("north")
         this._map[row][col].splice(this._map[row][col].indexOf("wall"), 1)
+        this._paths.push(["north", col, row, col])
       } else {
         ;[row, col] = this.getRandomCorner()
       }
@@ -340,7 +353,7 @@ export default class MazeBuilder {
   }
 
   private placePaths() {
-    for (const path of this.paths) {
+    for (const path of this._paths) {
       this.carvePath(path)
     }
   }

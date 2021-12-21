@@ -1,23 +1,20 @@
 import { Box } from "@chakra-ui/react"
 import { Component } from "react"
-import MazeBuilder from "./MazeBuilder"
+import Chamber from "./Chamber"
+import Level from "./Level"
 
 interface IProps {}
 
 interface IState {
-  mazeBuilder: MazeBuilder
+  chamber: Chamber
 }
 
 export default class Maze extends Component<IProps, IState> {
   constructor(props: IProps) {
+    const level = new Level()
     super(props)
     this.state = {
-      mazeBuilder: new MazeBuilder(
-        4,
-        4,
-        [{ path: true }, { path: false }],
-        [["south", 11]]
-      ),
+      chamber: new Chamber(3, 4, [{ path: true }, { path: false }], [["south", 11]]),
     }
     this.logMaze = this.logMaze.bind(this)
     this.moveNorth = this.moveNorth.bind(this)
@@ -28,7 +25,7 @@ export default class Maze extends Component<IProps, IState> {
   }
 
   logMaze() {
-    const maze = this.state.mazeBuilder.map
+    const maze = this.state.chamber.map
 
     for (let i = 0; i < maze.length; i++) {
       let row = ""
@@ -50,24 +47,24 @@ export default class Maze extends Component<IProps, IState> {
     }
   }
   moveNorth() {
-    this.state.mazeBuilder.moveNorth()
-    this.setState({ mazeBuilder: this.state.mazeBuilder })
+    this.state.chamber.moveNorth()
+    this.setState({ chamber: this.state.chamber })
   }
   moveSouth() {
-    this.state.mazeBuilder.moveSouth()
-    this.setState({ mazeBuilder: this.state.mazeBuilder })
+    this.state.chamber.moveSouth()
+    this.setState({ chamber: this.state.chamber })
   }
   moveEast() {
-    this.state.mazeBuilder.moveEast()
-    this.setState({ mazeBuilder: this.state.mazeBuilder })
+    this.state.chamber.moveEast()
+    this.setState({ chamber: this.state.chamber })
   }
   moveWest() {
-    this.state.mazeBuilder.moveWest()
-    this.setState({ mazeBuilder: this.state.mazeBuilder })
+    this.state.chamber.moveWest()
+    this.setState({ chamber: this.state.chamber })
   }
 
   renderMaze() {
-    const maze = this.state.mazeBuilder.map
+    const maze = this.state.chamber.map
     const board = []
     for (let i = 0; i < maze.length; i++) {
       const row = []
