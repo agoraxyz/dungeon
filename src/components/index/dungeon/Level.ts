@@ -1,14 +1,64 @@
 import seedrandom from "seedrandom"
 import Chamber from "./Chamber2"
+import * as types from "./types"
+
+const dummyThings: types.DungeonThing[] = [
+  {
+    type: "dungeonObj",
+    artifact: { att: 1, def: 1, dmg: { min: 1, max: 1 } },
+    extraHealth: 1,
+  },
+  {
+    type: "guarded",
+    passage: true,
+    guard: {
+      type: "creature",
+      kind: types.CreatureType.Medusa,
+      attr: {
+        attack: 1,
+        defense: 1,
+        hitpoints: 1,
+        damage: { min: 1, max: 1 },
+      },
+      health: 1,
+      size: 1,
+    },
+  },
+  {
+    type: "creature",
+    kind: types.CreatureType.Skeleton,
+    attr: {
+      attack: 1,
+      defense: 1,
+      hitpoints: 1,
+      damage: { min: 1, max: 1 },
+    },
+    health: 1,
+    size: 1,
+  },
+]
+
+// TODO place stuff in addChamber
+// TODO place guarded with passage in generated passage
+// TODO place other guardeds in a carved out box
 
 export type Map = string[][][]
 
-export type Path = [direction: string, row: number, col: number]
+export type Passage = [direction: string, row: number, col: number]
+
+type Coords = [row: number, col: number]
 
 type ChamberParams = {
   startRow: number
   startCol: number
-  paths: Path[]
+  passages: Passage[]
+}
+
+type ThingOnMap = {
+  index: number
+  name: string
+  row: number
+  col: number
 }
 
 const C_INIT_HEIGHT = 3
@@ -23,6 +73,10 @@ export default class Level {
   private cols: number
   private chambers: ChamberParams[] = []
   private _map: Map = []
+  private heroCoords: Coords
+  private entranceCoords: Coords
+  private thingsOnMap: ThingOnMap[] = []
+  private dungeonThings: types.DungeonThing[] = []
 
   constructor() {
     this.rand = seedrandom("hello")
@@ -31,10 +85,10 @@ export default class Level {
     this.makeMap()
     this.chambers = []
 
-    this.createFirstChamber()
-    this.addChamber(this.chambers[0])
-    this.addChamber(this.chambers[1])
-    this.addChamber(this.chambers[2])
+    // this.createFirstChamber()
+    this.addChamber(dummyThings)
+    // this.addChamber()
+    // this.addChamber()
   }
 
   public get map() {
@@ -58,7 +112,7 @@ export default class Level {
   }
 
   private move(direction: string) {
-    const [r, c] = this.find("hero")
+    const [r, c] = this.heroCoords
 
     let tr: number, tc: number
     switch (direction) {
@@ -93,6 +147,7 @@ export default class Level {
     }
     locationCell.splice(locationCell.indexOf("hero"), 1)
     targetCell.push("hero")
+    this.heroCoords = [tr, tc]
     this._map = _map
   }
 
@@ -105,45 +160,33 @@ export default class Level {
     }
   }
 
-  private createFirstChamber() {
-    const chamber = new Chamber(
-      C_INIT_HEIGHT,
-      C_INIT_WIDTH,
-      C_SCALE,
-      [["south", 13, 5]],
-      "1"
-    )
-
-    const fromRow = 0
-    const fromCol = 0
-
-    for (let i = 0; i < chamber.getRows(); i++) {
-      for (let j = 0; j < chamber.getCols(); j++) {
-        const chamberCell = chamber.map[i][j]
-        this._map[fromRow + i][fromCol + j] = [...chamberCell]
-      }
+  private addChamber(things: types.DungeonThing[] = []) {
+    const passages: Passage[] = []
+    let startRow: number, startCol: number
+    const isFirstChamber = this.chambers.length === 0
+    if (isFirstChamber) {
+      startRow = 0
+      startCol = 0
+    } else {
+      const chamberParams = this.chambers[this.chambers.length - 1]
+      const passageNum = chamberParams.passages.length - 1
+      const reversedPassage = this.getReversePassage(
+        chamberParams.passages[passageNum]
+      )
+      passages.push(reversedPassage)
+      const [row, col] = this.findSpace(chamberParams, passageNum)
+      startRow = row
+      startCol = col
     }
-    this.placeLadderAndHero(fromRow, fromCol, C_ROWS, C_COLS)
-    this.chambers.push({
-      startRow: fromRow,
-      startCol: fromCol,
-      paths: chamber.paths,
-    })
-  }
 
-  private addChamber(chamberParams: ChamberParams) {
-    const pathNum = chamberParams.paths.length - 1
-    const reversedPath = this.getReversePath(chamberParams.paths[pathNum])
-    const nextPath: Path = ["south", 13, this.getRandom(0, C_COLS - 1)]
-    const chamber = new Chamber(
-      C_INIT_HEIGHT,
-      C_INIT_WIDTH,
-      C_SCALE,
-      [reversedPath, nextPath],
-      "2"
-    )
-    const [startRow, startCol] = this.findSpace(chamberParams, pathNum)
+    if (this.guardsPassage(things)) {
+      const nextPassage: Passage = ["south", 13, this.getRandom(0, C_COLS - 1)]
+      passages.push(nextPassage)
+    }
 
+    // TODO error when seed is without + 1
+    const seed = JSON.stringify(passages) + (this.chambers.length + 1).toString()
+    const chamber = new Chamber(C_INIT_HEIGHT, C_INIT_WIDTH, C_SCALE, passages, seed)
     for (let i = 0; i < chamber.getRows(); i++) {
       for (let j = 0; j < chamber.getCols(); j++) {
         const chamberCell = chamber.map[i][j]
@@ -153,26 +196,30 @@ export default class Level {
     this.chambers.push({
       startRow,
       startCol,
-      paths: [reversedPath, nextPath],
+      passages: [...passages],
     })
-  }
 
-  private getReversePath(path: Path): Path {
-    switch (path[0]) {
-      case "north":
-        return ["south", C_ROWS - 1, path[2]]
-      case "south":
-        return ["north", 0, path[2]]
-      case "east":
-        return ["west", path[1], 0]
-      case "west":
-        return ["east", path[1], C_COLS - 1]
+    if (isFirstChamber) {
+      this.placeEntranceAndHero(startRow, startCol, C_ROWS, C_COLS)
     }
   }
 
-  private findSpace(chamber: ChamberParams, pathNum: number) {
+  private getReversePassage(passage: Passage): Passage {
+    switch (passage[0]) {
+      case "north":
+        return ["south", C_ROWS - 1, passage[2]]
+      case "south":
+        return ["north", 0, passage[2]]
+      case "east":
+        return ["west", passage[1], 0]
+      case "west":
+        return ["east", passage[1], C_COLS - 1]
+    }
+  }
+
+  private findSpace(chamber: ChamberParams, passageNum: number) {
     const minSpace = 0
-    const [direction, row, col] = chamber.paths[pathNum]
+    const [direction, row, col] = chamber.passages[passageNum]
     let startRow, startCol
     switch (direction) {
       case "north":
@@ -195,7 +242,7 @@ export default class Level {
     return [startRow, startCol]
   }
 
-  private placeLadderAndHero(
+  private placeEntranceAndHero(
     startRow: number,
     startCol: number,
     rows: number,
@@ -207,15 +254,29 @@ export default class Level {
       const row = this.getRandom(startRow, startRow + rows)
       const col = this.getRandom(startCol, startCol + cols)
       const cell = this._map[row][col]
-      if (!cell.includes("wall")) {
-        cell.push("ladder")
+      if (cell.length === 0 && this.checkNeighborsEmpty(row, col)) {
         cell.push("hero")
+        this._map[row - 1][col].push("entrance")
+        this.heroCoords = [row, col]
+        this.entranceCoords = [row - 1, col]
         break
       }
       if (count > 100) {
         throw Error("Could not place hero")
       }
     }
+  }
+
+  private checkNeighborsEmpty(row: number, col: number) {
+    const nw = this._map[row - 1][col - 1].length === 0
+    const n = this._map[row - 1][col].length === 0
+    const ne = this._map[row - 1][col + 1].length === 0
+    const w = this._map[row][col - 1].length === 0
+    const e = this._map[row][col + 1].length === 0
+    const sw = this._map[row + 1][col - 1].length === 0
+    const s = this._map[row + 1][col].length === 0
+    const se = this._map[row + 1][col + 1].length === 0
+    return nw && n && ne && w && e && sw && s && se
   }
 
   private getRandomCorner() {
@@ -261,6 +322,15 @@ export default class Level {
       }
     }
     return [-1, -1]
+  }
+
+  private guardsPassage(things: types.DungeonThing[]) {
+    for (const thing of things) {
+      if (thing.type === "guarded" && thing.passage) {
+        return true
+      }
+    }
+    return false
   }
 
   private getRandom(from: number, to: number) {
