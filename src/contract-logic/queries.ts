@@ -2,7 +2,7 @@ import { Connection, PublicKey } from "@solana/web3.js"
 import { deserializeUnchecked } from "borsh"
 import { Hero, DungeonState, SCHEMA } from "./schema"
 
-async function getHeroState(connection: Connection, ownerPubkey: PublicKey): Promise<Hero> {
+export async function getHeroState(connection: Connection, ownerPubkey: PublicKey): Promise<Hero> {
   const { getHeroStatePubkeyWasm } = await import ("../../wasm-factory")
   const heroStatePubkey = new PublicKey(
     await getHeroStatePubkeyWasm(ownerPubkey.asBytes())
@@ -13,7 +13,7 @@ async function getHeroState(connection: Connection, ownerPubkey: PublicKey): Pro
   return deserializeUnchecked(SCHEMA, Hero, heroStateData)
 }
 
-async function getGameState(connection: Connection, ownerPubkey: PublicKey): Promise<DungeonState> {
+export async function getGameState(connection: Connection, ownerPubkey: PublicKey): Promise<DungeonState> {
   const { getGameStatePubkeyWasm } = await import ("../../wasm-factory")
   const gameStatePubkey = new PublicKey(
     await getGameStatePubkeyWasm(ownerPubkey.asBytes())
