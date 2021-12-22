@@ -629,7 +629,6 @@ export const SCHEMA = new Map<any, any>([
 			['combatLogs', [CombatLog]],
 			['level', 'u8'],
 			['uncoveredActions', 'u8'],
-			,
                 ],
             },
     ],
