@@ -1,5 +1,5 @@
 import seedrandom from "seedrandom"
-import Chamber from "./Chamber2"
+import Chamber from "./Chamber"
 import * as types from "./types"
 
 const dummyThings: types.DungeonThing[] = [

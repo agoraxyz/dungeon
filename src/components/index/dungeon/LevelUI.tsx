@@ -2,6 +2,7 @@ import { Box } from "@chakra-ui/react"
 import { Component } from "react"
 import Level from "./Level"
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface IProps {}
 
 interface IState {
@@ -88,7 +89,7 @@ export default class Maze extends Component<IProps, IState> {
 
   render() {
     return (
-      <Box onKeyDown={this.handleKeyPress} tabIndex="0">
+      <Box onKeyDown={this.handleKeyPress} tabIndex={0}>
         {this.renderLevel()}
       </Box>
     )

@@ -1,11 +1,10 @@
 // Original JavaScript code by Chirp Internet: chirpinternet.eu
 // Please acknowledge use of this code by including this header.
 import seedrandom from "seedrandom"
-import * as types from "./types"
 
 export type Map = string[][][]
 export type loc = [row: number, col: number]
-export type Path = [direction: string, place: number, row: number, col: number]
+export type Path = [direction: string, row: number, col: number]
 
 export default class Chamber {
   private width: number
@@ -13,16 +12,20 @@ export default class Chamber {
   private cols: number
   private rows: number
   private random: any
-  private things: types.Thing[]
   private _paths: Path[]
 
   private _map: Map
 
-  constructor(width: number, height: number, things: types.Thing[], paths: Path[]) {
+  constructor(
+    width: number,
+    height: number,
+    scale: number,
+    paths: Path[],
+    seed: string
+  ) {
     this.width = width
     this.height = height
-    this.random = seedrandom("asd")
-    this.things = things
+    this.random = seedrandom(seed)
     this._paths = paths
 
     this.cols = 2 * this.width + 1
@@ -53,9 +56,7 @@ export default class Chamber {
 
     // start partitioning
     this.partition(1, this.height - 1, 1, this.width - 1)
-    this.scale(4)
-    this.placeLadderAndHero()
-    this.placeThings()
+    this.scale(scale)
     this.placePaths()
   }
 
@@ -75,61 +76,6 @@ export default class Chamber {
     return this._map[0].length
   }
 
-  public moveNorth() {
-    this.move("north")
-  }
-
-  public moveSouth() {
-    this.move("south")
-  }
-
-  public moveWest() {
-    this.move("west")
-  }
-
-  public moveEast() {
-    this.move("east")
-  }
-
-  private move(direction: string) {
-    const [r, c] = this.find("hero")
-
-    let tr: number, tc: number
-    switch (direction) {
-      case "north":
-        tr = r - 1
-        tc = c
-        break
-      case "south":
-        tr = r + 1
-        tc = c
-        break
-      case "west":
-        tr = r
-        tc = c - 1
-        break
-      case "east":
-        tr = r
-        tc = c + 1
-        break
-      default:
-        tr = r
-        tc = c
-    }
-    if (!this.inBounds(tr, tc)) {
-      return
-    }
-    const _map = this.map
-    const locationCell = _map[r][c]
-    const targetCell = _map[tr][tc]
-    if (targetCell.includes("wall")) {
-      return
-    }
-    locationCell.splice(locationCell.indexOf("hero"), 1)
-    targetCell.push("hero")
-    this._map = _map
-  }
-
   private initArray(value: string[]) {
     return new Array(this.rows)
       .fill(null)
@@ -146,16 +92,6 @@ export default class Chamber {
 
   private posToWall(x: number) {
     return 2 * x
-  }
-
-  private inBounds(r: number, c: number) {
-    if (
-      typeof this._map[r] == "undefined" ||
-      typeof this._map[r][c] == "undefined"
-    ) {
-      return false // out of bounds
-    }
-    return true
   }
 
   private shuffle(array: boolean[]) {
@@ -258,100 +194,6 @@ export default class Chamber {
     this._map = _map
   }
 
-  private placeLadderAndHero() {
-    while (true) {
-      const row = this.rand(0, Math.floor(this._map.length - 1))
-      const col = this.rand(0, Math.floor(this._map[0].length - 1))
-      const cell = this._map[row][col]
-      if (!cell.includes("wall")) {
-        cell.push("ladder")
-        cell.push("hero")
-        break
-      }
-    }
-  }
-
-  private placeThings() {
-    for (const thing of this.things) {
-      let row: number, col: number
-      if (thing.path) {
-        ;[row, col] = this.getRandomEdge("north")
-        this._map[row][col].splice(this._map[row][col].indexOf("wall"), 1)
-        this._paths.push(["north", col, row, col])
-      } else {
-        ;[row, col] = this.getRandomCorner()
-      }
-      this._map[row][col].push("thing")
-    }
-  }
-
-  private getRandomCorner() {
-    while (true) {
-      const row = this.rand(0, Math.floor(this._map.length - 1))
-      const col = this.rand(0, Math.floor(this._map[0].length - 1))
-      const cell = this._map[row][col]
-      if (cell.length === 0) {
-        let wallCount = 0
-        const nw = this._map[row - 1][col - 1]
-        const n = this._map[row - 1][col]
-        const ne = this._map[row - 1][col + 1]
-        const w = this._map[row][col - 1]
-        const e = this._map[row][col + 1]
-        const sw = this._map[row + 1][col - 1]
-        const s = this._map[row + 1][col]
-        const se = this._map[row + 1][col + 1]
-
-        if (n.includes("wall") && s.includes("wall")) continue
-        if (w.includes("wall") && e.includes("wall")) continue
-
-        if (nw.includes("wall")) wallCount += 1
-        if (n.includes("wall")) wallCount += 1
-        if (ne.includes("wall")) wallCount += 1
-        if (w.includes("wall")) wallCount += 1
-        if (e.includes("wall")) wallCount += 1
-        if (sw.includes("wall")) wallCount += 1
-        if (s.includes("wall")) wallCount += 1
-        if (se.includes("wall")) wallCount += 1
-        if (wallCount >= 5) {
-          return [row, col]
-        }
-      }
-    }
-  }
-
-  private getRandomEdge(direction: string) {
-    while (true) {
-      let row, col, nextRow, nextCol
-      if (direction === "north") {
-        row = 0
-        col = this.rand(0, this._map[0].length - 1)
-        nextRow = 1
-        nextCol = col
-      } else if (direction === "south") {
-        row = this.rows - 1
-        col = this.rand(0, this._map[0].length - 1)
-        nextRow = row - 1
-        nextCol = col
-      } else if (direction === "west") {
-        row = this.rand(0, this._map.length - 1)
-        col = 0
-        nextRow = row
-        nextCol = 1
-      } else if (direction === "east") {
-        row = this.rand(0, this._map.length - 1)
-        col = this.cols - 1
-        nextRow = row
-        nextCol = col - 1
-      }
-      if (
-        this._map[row][col].includes("wall") &&
-        !this._map[nextRow][nextCol].includes("wall")
-      ) {
-        return [row, col]
-      }
-    }
-  }
-
   private placePaths() {
     for (const path of this._paths) {
       this.carvePath(path)
@@ -359,31 +201,31 @@ export default class Chamber {
   }
 
   private carvePath(path: Path) {
-    const [direction, place] = path
+    const [direction, _row, _col] = path
     let nextRow, nextCol, row, col
     switch (direction) {
       case "north":
         nextRow = 1
         nextCol = 0
         row = 0
-        col = place
+        col = _col
         break
       case "south":
         nextRow = -1
         nextCol = 0
         row = this._map.length - 1
-        col = place
+        col = _col
         break
       case "west":
         nextRow = 0
         nextCol = 1
-        row = place
+        row = _row
         col = 0
         break
       case "east":
         nextRow = 0
         nextCol = -1
-        row = place
+        row = _row
         col = this._map[0].length - 1
         break
       default:

@@ -15,6 +15,7 @@ import { Component } from "react"
 import LevelUI from "./LevelUI"
 import * as types from "./types"
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface IProps {}
 
 interface IState {
@@ -33,38 +34,11 @@ const dummyHero: types.Hero = {
   },
 }
 
-const dummyCreatures: types.Creature[] = [
-  {
-    type: 1,
-    attr: { attack: 4, defense: 2, hitpoints: 10, damage: { min: 2, max: 4 } },
-    health: 100,
-    size: 1,
-  },
-  {
-    type: 2,
-    attr: { attack: 3, defense: 10, hitpoints: 15, damage: { min: 1, max: 5 } },
-    health: 80,
-    size: 2,
-  },
-  {
-    type: 3,
-    attr: { attack: 3, defense: 10, hitpoints: 15, damage: { min: 1, max: 5 } },
-    health: 80,
-    size: 2,
-  },
-  {
-    type: 4,
-    attr: { attack: 3, defense: 10, hitpoints: 15, damage: { min: 1, max: 5 } },
-    health: 80,
-    size: 2,
-  },
-]
-
 export default class Dungeon extends Component<IProps, IState> {
   constructor(props: IProps) {
     super(props)
     this.state = {
-      actions: dummyCreatures,
+      actions: [],
       hero: dummyHero,
     }
   }
@@ -90,41 +64,39 @@ export default class Dungeon extends Component<IProps, IState> {
   }
 
   showActions() {
-    return this.state.actions.map((creature, i) => {
-      return (
-        <Box key={i} display="flex" alignItems="center">
-          <Image
-            src={`/creatures/${creature.type}.png`}
-            alt={types.CreatureType[creature.type]}
-          />
-          <Box display="flex" alignItems="baseline">
-            <Popover>
-              <PopoverTrigger>
-                <Button variant="ghost" size="lg">
-                  {types.CreatureType[creature.type]}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent>
-                <PopoverArrow />
-                <PopoverHeader>stats</PopoverHeader>
-                <PopoverBody>
-                  <Text>health: {creature.health}</Text>
-                  <Text>size: {creature.size}</Text>
-                  <Text>attributes:</Text>
-                  <Text>&emsp; attack: {creature.attr.attack}</Text>
-                  <Text>&emsp; defense: {creature.attr.defense}</Text>
-                  <Text>&emsp; hitpoints: {creature.attr.hitpoints}</Text>
-                  <Text>
-                    &emsp; damage: {creature.attr.damage.min} -{" "}
-                    {creature.attr.damage.max}
-                  </Text>
-                </PopoverBody>
-              </PopoverContent>
-            </Popover>
-          </Box>
+    return this.state.actions.map((creature, i) => (
+      <Box key={i} display="flex" alignItems="center">
+        <Image
+          src={`/creatures/${creature.type}.png`}
+          alt={types.CreatureType[creature.type]}
+        />
+        <Box display="flex" alignItems="baseline">
+          <Popover>
+            <PopoverTrigger>
+              <Button variant="ghost" size="lg">
+                {types.CreatureType[creature.type]}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent>
+              <PopoverArrow />
+              <PopoverHeader>stats</PopoverHeader>
+              <PopoverBody>
+                <Text>health: {creature.health}</Text>
+                <Text>size: {creature.size}</Text>
+                <Text>attributes:</Text>
+                <Text>&emsp; attack: {creature.attr.attack}</Text>
+                <Text>&emsp; defense: {creature.attr.defense}</Text>
+                <Text>&emsp; hitpoints: {creature.attr.hitpoints}</Text>
+                <Text>
+                  &emsp; damage: {creature.attr.damage.min} -{" "}
+                  {creature.attr.damage.max}
+                </Text>
+              </PopoverBody>
+            </PopoverContent>
+          </Popover>
         </Box>
-      )
-    })
+      </Box>
+    ))
   }
 
   render() {
