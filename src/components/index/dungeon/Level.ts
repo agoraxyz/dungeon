@@ -54,6 +54,25 @@ const dummyThings: types.DungeonThing[] = [
   },
 ]
 
+const dummyThings2: types.DungeonThing[] = [
+  {
+    type: "guarded",
+    passage: true,
+    guard: {
+      type: "creature",
+      kind: types.CreatureType.Medusa,
+      attr: {
+        attack: 1,
+        defense: 1,
+        hitpoints: 1,
+        damage: { min: 1, max: 1 },
+      },
+      health: 1,
+      size: 1,
+    },
+  },
+]
+
 // TODO place stuff in addChamber
 // TODO place guarded with passage in generated passage
 // TODO place other guardeds in a carved out box
@@ -102,7 +121,10 @@ export default class Level {
 
     // this.createFirstChamber()
     this.addChamber(dummyThings)
-    // this.addChamber()
+    this.addChamber(dummyThings)
+    this.addChamber(dummyThings)
+    this.addChamber(dummyThings)
+
     // this.addChamber()
   }
 
@@ -124,6 +146,12 @@ export default class Level {
 
   public moveEast() {
     this.move("east")
+  }
+
+  public interact() {
+    console.log("interact")
+    const coords = this.getNearbyThingCoords()
+    console.log(coords)
   }
 
   private move(direction: string) {
@@ -164,6 +192,7 @@ export default class Level {
     targetCell.push("hero")
     this.heroCoords = [tr, tc]
     this._map = _map
+    console.log("hero coords", this.heroCoords)
   }
 
   private makeMap() {
@@ -196,7 +225,7 @@ export default class Level {
 
     let nextPassageCoords: Coords | undefined = undefined
     if (this.guardsPassage(things)) {
-      const [row, col] = [C_ROWS - 1, this.getRandom(0, C_COLS - 1)]
+      const [row, col] = [C_ROWS - 1, this.getRandom(1, C_COLS - 1)]
       const nextPassage: Passage = ["south", row, col]
       nextPassageCoords = [row, col]
       passages.push(nextPassage)
@@ -344,20 +373,24 @@ export default class Level {
           const [wallRow, wallCol] = wallCoords
           const wall = this._map[wallRow][wallCol]
           const guardedName = thing.ladder ? "ladder" : "obj"
-          wall.pop()
-          wall.push(guardedName)
-          this.thingsOnMap.push({
-            row: wallRow,
-            col: wallCol,
-            name: guardedName,
-          })
 
+          // first add the creature guarding the stuff
           const cell = this._map[row][col]
           cell.push("creature")
           this.thingsOnMap.push({
             row,
             col,
             name: "creature",
+          })
+          this.dungeonThings.push(thing)
+
+          // then carve out the wall and add stuff
+          wall.pop()
+          wall.push(guardedName)
+          this.thingsOnMap.push({
+            row: wallRow,
+            col: wallCol,
+            name: guardedName,
           })
           this.dungeonThings.push(thing)
           break
@@ -398,6 +431,21 @@ export default class Level {
     return true
   }
 
+  private getNearbyThingCoords(): Coords | undefined {
+    const [row, col] = this.heroCoords
+    for (let i = -1; i <= 1; i++) {
+      for (let j = -1; j <= 1; j++) {
+        if (i === 0 && j === 0) continue
+        if (
+          this._map[row + i][col + j].length !== 0 &&
+          !this._map[row + i][col + j].includes("wall")
+        ) {
+          return [row + i, col + j]
+        }
+      }
+    }
+  }
+
   private getWallCordsIfNextToWall(row: number, col: number) {
     if (
       !this._map[row] ||
@@ -425,51 +473,6 @@ export default class Level {
     } else {
       return undefined
     }
-  }
-
-  private getRandomCorner() {
-    while (true) {
-      const row = this.rand(0, Math.floor(this._map.length - 1))
-      const col = this.rand(0, Math.floor(this._map[0].length - 1))
-      const cell = this._map[row][col]
-      if (cell.length === 0) {
-        let wallCount = 0
-        const nw = this._map[row - 1][col - 1]
-        const n = this._map[row - 1][col]
-        const ne = this._map[row - 1][col + 1]
-        const w = this._map[row][col - 1]
-        const e = this._map[row][col + 1]
-        const sw = this._map[row + 1][col - 1]
-        const s = this._map[row + 1][col]
-        const se = this._map[row + 1][col + 1]
-
-        if (n.includes("wall") && s.includes("wall")) continue
-        if (w.includes("wall") && e.includes("wall")) continue
-
-        if (nw.includes("wall")) wallCount += 1
-        if (n.includes("wall")) wallCount += 1
-        if (ne.includes("wall")) wallCount += 1
-        if (w.includes("wall")) wallCount += 1
-        if (e.includes("wall")) wallCount += 1
-        if (sw.includes("wall")) wallCount += 1
-        if (s.includes("wall")) wallCount += 1
-        if (se.includes("wall")) wallCount += 1
-        if (wallCount >= 5) {
-          return [row, col]
-        }
-      }
-    }
-  }
-
-  private find(item: string): [number, number] {
-    for (let r = 0; r < this._map.length; r++) {
-      for (let c = 0; c < this._map[0].length; c++) {
-        if (this._map[r][c].includes(item)) {
-          return [r, c]
-        }
-      }
-    }
-    return [-1, -1]
   }
 
   private guardsPassage(things: types.DungeonThing[]) {

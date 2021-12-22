@@ -52,10 +52,14 @@ export default class Maze extends Component<IProps, IState> {
           row.push(<Box key={j} bg="yellow.900" w="5px" h="5px" />)
         } else if (cell.includes("hero")) {
           row.push(<Box key={j} bg="blue.300" w="5px" h="5px" />)
-        } else if (cell.includes("door")) {
+        } else if (cell.includes("obj")) {
           row.push(<Box key={j} bg="green.300" w="5px" h="5px" />)
+        } else if (cell.includes("entrance")) {
+          row.push(<Box key={j} bg="gray.0" w="5px" h="5px" />)
+        } else if (cell.includes("ladder")) {
+          row.push(<Box key={j} bg="yellow.300" w="5px" h="5px" />)
         } else {
-          row.push(<Box key={j} bg="red.300" w="5px" h="5px" />)
+          row.push(<Box key={j} bg="red.600" w="5px" h="5px" />)
         }
       }
       board.push(
@@ -76,6 +80,9 @@ export default class Maze extends Component<IProps, IState> {
       this.moveWest()
     } else if (e.key === "d") {
       this.moveEast()
+    } else if (e.key == "f") {
+      this.state.level.interact()
+      this.setState({ level: this.state.level })
     }
   }
 
