@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start --workspace=src/contract-logic",
+    "start": "next start",
+    "contract-logic": "npm run start --workspace=src/contract-logic",
     "type-check": "tsc --pretty --noEmit",
     "format": "prettier --write .",
     "lint": "next lint",

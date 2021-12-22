@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "hello",
   "scripts": {
-    "test": "test"
+    "test": "test",
+    "start": "npx ts-node index.ts"
   },
   "author": "",
   "license": "ISC",
