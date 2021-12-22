@@ -121,9 +121,9 @@ export default class Level {
 
     // this.createFirstChamber()
     this.addChamber(dummyThings)
-    this.addChamber(dummyThings)
-    this.addChamber(dummyThings)
-    this.addChamber(dummyThings)
+    // this.addChamber(dummyThings)
+    // this.addChamber(dummyThings)
+    // this.addChamber(dummyThings)
 
     // this.addChamber()
   }
@@ -151,7 +151,26 @@ export default class Level {
   public interact() {
     console.log("interact")
     const coords = this.getNearbyThingCoords()
-    console.log(coords)
+    if (!coords) return
+    const thingIndex = this.getThingByCoords(coords)
+    if (thingIndex === -1) return
+
+    const thingOnMap = this.thingsOnMap[thingIndex]
+    const thing = this.dungeonThings[thingIndex]
+    if (thing.type === "creature") {
+      console.log("creature")
+    } else if (thing.type === "dungeonObj") {
+      console.log("dungeonObj")
+    } else if (thing.type === "guarded") {
+      console.log("guarded")
+      console.log("thing", thing)
+      if (!thing.passage) return
+      this.addChamber(dummyThings)
+      this.thingsOnMap.splice(thingIndex, 1)
+      this.dungeonThings.splice(thingIndex, 1)
+      this._map[thingOnMap.row][thingOnMap.col] = []
+    }
+    console.log(coords, thingIndex)
   }
 
   private move(direction: string) {
@@ -433,17 +452,28 @@ export default class Level {
 
   private getNearbyThingCoords(): Coords | undefined {
     const [row, col] = this.heroCoords
-    for (let i = -1; i <= 1; i++) {
-      for (let j = -1; j <= 1; j++) {
-        if (i === 0 && j === 0) continue
-        if (
-          this._map[row + i][col + j].length !== 0 &&
-          !this._map[row + i][col + j].includes("wall")
-        ) {
-          return [row + i, col + j]
-        }
+    const neighbours = [
+      [-1, 0],
+      [0, -1],
+      [0, 1],
+      [1, 0],
+    ]
+    for (const [i, j] of neighbours) {
+      if (
+        this._map[row + i][col + j].length !== 0 &&
+        !this._map[row + i][col + j].includes("wall")
+      ) {
+        return [row + i, col + j]
       }
     }
+  }
+
+  private getThingByCoords(coords: Coords): number {
+    const [row, col] = coords
+    const index = this.thingsOnMap.findIndex(
+      (val) => val.row === row && val.col === col
+    )
+    return index
   }
 
   private getWallCordsIfNextToWall(row: number, col: number) {
