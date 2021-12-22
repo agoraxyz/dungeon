@@ -43,7 +43,6 @@ export class CreatureStack extends Struct {
     stackSize: number;
     guarded: Guarded | null;
     damageType: DamageType;
-    damageModifier: DamageModifier;
 };
 
 export class Creature extends Enum {
@@ -152,6 +151,23 @@ export class Damage extends Struct {
 export class CombatLog extends Struct {
     attackerHp: number;
     defenderHp: number;
+};
+
+export class Action extends Enum {
+    actionAttack: ActionAttack;
+    actionInteract: ActionInteract;
+    actionLadder: ActionLadder;
+};
+
+export class ActionAttack extends Struct {
+    unnamed_0: CreatureStack;
+};
+
+export class ActionInteract extends Struct {
+    unnamed_0: DungeonObject;
+};
+
+export class ActionLadder extends Struct {
 };
 
 export class Artifact extends Struct {
@@ -288,7 +304,6 @@ export const SCHEMA = new Map<any, any>([
 			['stackSize', 'u16'],
 			['guarded', { kind: 'option', type: Guarded }],
 			['damageType', DamageType],
-			['damageModifier', DamageModifier],
                 ],
             },
     ],
@@ -505,6 +520,39 @@ export const SCHEMA = new Map<any, any>([
                 kind: 'struct', fields: [
 			['attackerHp', 'u16'],
 			['defenderHp', 'u16'],
+                ],
+            },
+    ],
+    [
+            Action,
+            {
+                kind: 'enum', field: 'enum', values: [
+			['actionAttack', ActionAttack],
+			['actionInteract', ActionInteract],
+			['actionLadder', ActionLadder],
+                ],
+            },
+    ],
+    [
+            ActionAttack,
+            {
+                kind: 'struct', fields: [
+			['unnamed_0', CreatureStack],
+                ],
+            },
+    ],
+    [
+            ActionInteract,
+            {
+                kind: 'struct', fields: [
+			['unnamed_0', DungeonObject],
+                ],
+            },
+    ],
+    [
+            ActionLadder,
+            {
+                kind: 'struct', fields: [
                 ],
             },
     ],
