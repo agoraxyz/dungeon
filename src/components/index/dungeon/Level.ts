@@ -211,7 +211,7 @@ export default class Level {
     targetCell.push("hero")
     this.heroCoords = [tr, tc]
     this._map = _map
-    console.log("hero coords", this.heroCoords)
+    console.log("hero coords", ...this.heroCoords)
   }
 
   private makeMap() {
