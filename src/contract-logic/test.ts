@@ -1,3 +1,5 @@
+//const CONNECTION = new Connection("https://api.testnet.solana.com", "singleGossip")
+export const CONNECTION = new Connection("http://localhost:8899", "singleGossip")
 
 export const PLAYER_SECRET = Uint8Array.from([
   110, 156, 29, 116, 136, 221, 72, 113, 16, 84, 50, 192, 65, 209, 100, 231, 3, 47, 231, 28, 161,

@@ -5,7 +5,7 @@ import { Hero, DungeonState, SCHEMA } from "./schema"
 export async function getHeroState(connection: Connection, ownerPubkey: PublicKey): Promise<Hero> {
   const { getHeroStatePubkeyWasm } = await import ("../../wasm-factory")
   const heroStatePubkey = new PublicKey(
-    await getHeroStatePubkeyWasm(ownerPubkey.asBytes())
+    await getHeroStatePubkeyWasm(ownerPubkey.toBytes())
   );
 
   const heroStateAccount = await connection.getAccountInfo(heroStatePubkey)
@@ -16,7 +16,7 @@ export async function getHeroState(connection: Connection, ownerPubkey: PublicKe
 export async function getGameState(connection: Connection, ownerPubkey: PublicKey): Promise<DungeonState> {
   const { getGameStatePubkeyWasm } = await import ("../../wasm-factory")
   const gameStatePubkey = new PublicKey(
-    await getGameStatePubkeyWasm(ownerPubkey.asBytes())
+    await getGameStatePubkeyWasm(ownerPubkey.toBytes())
   );
 
   const gameStateAccount = await connection.getAccountInfo(gameStatePubkey)

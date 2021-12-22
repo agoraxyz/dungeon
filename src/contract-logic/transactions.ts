@@ -1,6 +1,6 @@
 import { Connection, PublicKey, Transaction } from "@solana/web3.js"
 import { serialize } from "borsh"
-import { DeleteGameArgs, SCHEMA } from "./schema"
+import { InitializeGameArgs, DeleteGameArgs, performActionArgs, SCHEMA } from "./schema"
 import { parseInstruction } from "./utils"
 
 export async function initGame(connection: Connection, ownerPubkey: PublicKey) {

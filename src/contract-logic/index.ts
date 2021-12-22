@@ -1,11 +1,7 @@
 import { Connection, Keypair } from "@solana/web3.js"
 import { getHeroState, getGameState } from "./queries"
 import { initGame, deleteGame, performAction } from "./transactions"
-import { sendTransaction, PLAYER_SECRET } from "./test"
-
-//const CONNECTION = new Connection("https://api.testnet.solana.com", "singleGossip")
-const CONNECTION = new Connection("http://localhost:8899", "singleGossip")
-
+import { sendTransaction, PLAYER_SECRET, CONNECTION } from "./test"
 
 ;(async () => {
   const player = Keypair.fromSecretKey(PLAYER_SECRET)
