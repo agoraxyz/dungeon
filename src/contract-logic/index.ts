@@ -1,4 +1,4 @@
-import { Connection, Keypair } from "@solana/web3.js"
+import { Keypair } from "@solana/web3.js"
 import { getHeroState, getGameState } from "./queries"
 import { initGame, deleteGame, performAction } from "./transactions"
 import { sendTransaction, PLAYER_SECRET, CONNECTION } from "./test"

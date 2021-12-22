@@ -1,3 +1,5 @@
+import { Connection } from "@solana/web3.js";
+
 //const CONNECTION = new Connection("https://api.testnet.solana.com", "singleGossip")
 export const CONNECTION = new Connection("http://localhost:8899", "singleGossip")
 
