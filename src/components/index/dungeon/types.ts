@@ -21,6 +21,30 @@ export enum CreatureType {
   Dragon = 20,
 }
 
+export type DungeonThing = DungeonObj | Creature | Guarded
+
+export type DungeonObj = {
+  type: "dungeonObj"
+  artifact: { att: number; def: number; dmg: Damage }
+  extraHealth: number
+}
+
+export type Guarded = {
+  type: "guarded"
+  chamberObj?: DungeonObj
+  passage?: boolean
+  ladder?: boolean
+  guard: Creature
+}
+
+export type Creature = {
+  type: "creature"
+  kind: CreatureType
+  attr: CreatureAttributes
+  health: number
+  size: number
+}
+
 export type CreatureAttributes = {
   attack: number
   defense: number
@@ -31,13 +55,6 @@ export type CreatureAttributes = {
 export type Damage = {
   min: number
   max: number
-}
-
-export type Creature = {
-  type: CreatureType
-  attr: CreatureAttributes
-  health: number
-  size: number
 }
 
 export type HeroAttributes = {

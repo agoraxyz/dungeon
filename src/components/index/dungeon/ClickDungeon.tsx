@@ -12,7 +12,6 @@ import {
   Text,
 } from "@chakra-ui/react"
 import { Component } from "react"
-import LevelUI from "./LevelUI"
 import * as types from "./types"
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -102,16 +101,10 @@ export default class Dungeon extends Component<IProps, IState> {
   render() {
     return (
       <Box display="flex" alignItems="flex-start">
-        {/* <Box>{this.showHero()}</Box> */}
-        {/* <Box>
+        <Box>{this.showHero()}</Box>
+        <Box>
           <Heading size="lg">Actions</Heading>
           <ol>{this.showActions()}</ol>
-        </Box> */}
-        {/* <Box>
-          <Maze />
-        </Box> */}
-        <Box>
-          <LevelUI />
         </Box>
       </Box>
     )
