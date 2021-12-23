@@ -1,6 +1,6 @@
 import { Connection, PublicKey, Transaction } from "@solana/web3.js"
 import { serialize } from "borsh"
-import { InitializeGameArgs, DeleteGameArgs, PerformActionArgs, SCHEMA } from "./schema"
+import { DeleteGameArgs, InitializeGameArgs, PerformActionArgs, SCHEMA } from "./schema"
 import { parseInstruction } from "./utils"
 
 export async function initGame(connection: Connection, ownerPubkey: PublicKey) {
@@ -36,7 +36,6 @@ export async function performAction(connection: Connection, ownerPubkey: PublicK
     heroOwnerPubkey: ownerPubkey,
     action_id: action_id
   })
-
   try {
     const instruction = parseInstruction(performActionWasm(serialize(SCHEMA, performActionArgs)))
     return new Transaction().add(instruction)
