@@ -57,7 +57,10 @@ const Dungeon = () => {
           height="200px"
           width="150px"
         />
-        <Text>xp: {hero.xp}</Text>
+        {print.heroInList(hero).map((h, i) => (
+          <Text key={i}>{h}</Text>
+        ))}
+        {/* <Text>xp: {hero.xp}</Text>
         <Text>attack: {hero.stats.att.base}</Text>
         <Text>defense: {hero.stats.ac.base}</Text>
         <Text>hitpoints: {hero.hitpoints}</Text>
@@ -72,7 +75,7 @@ const Dungeon = () => {
           size: {hero.stats.size.base} + {hero.stats.size.modifier}
         </Text>
         <Text>hp: {hero.stats.hp}</Text>
-        <Text>xp: {hero.stats.xp}</Text>
+        <Text>xp: {hero.stats.xp}</Text> */}
       </Box>
     ) : (
       <Box>
@@ -138,6 +141,7 @@ const Dungeon = () => {
       return (
         <Box key={key} display="flex" alignItems="center">
           {/* <Image src={`/creatures/1.png`} alt="asd" /> */}
+          <Text>{key}</Text>
           <Button onClick={() => performAction(key)}>{action.enum}</Button>
           <Box display="flex" alignItems="baseline">
             <Popover>
@@ -148,15 +152,13 @@ const Dungeon = () => {
               </PopoverTrigger>
               <PopoverContent>
                 <PopoverArrow />
-                <PopoverHeader>stats {key}</PopoverHeader>
+                <PopoverHeader>
+                  {key} - {action.enum}
+                </PopoverHeader>
                 <PopoverBody>
-                  <Text>{forPrint}</Text>
-                  {/* <Text>size: 1</Text>
-                  <Text>attributes:</Text>
-                  <Text>&emsp; attack: 1</Text>
-                  <Text>&emsp; defense: 1</Text>
-                  <Text>&emsp; hitpoints: 1</Text>
-                  <Text>&emsp; damage: 1 - 2</Text> */}
+                  {print.actionInfoInList(action).map((a, i) => (
+                    <Text key={i}>{a}</Text>
+                  ))}
                 </PopoverBody>
               </PopoverContent>
             </Popover>
@@ -172,7 +174,10 @@ const Dungeon = () => {
       return (
         <Box>
           <Heading size="lg">Logs</Heading>
-          <Text>{print.combatLogs(dungeonState.combatLogs)}</Text>
+          {/* <Text>{print.combatLogs(dungeonState.combatLogs)}</Text> */}
+          {print.combatLogsInList(dungeonState.combatLogs).map((l, i) => (
+            <Text key={i}>{l}</Text>
+          ))}
         </Box>
       )
     } else {
