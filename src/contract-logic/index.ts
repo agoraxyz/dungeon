@@ -14,10 +14,10 @@ import { sendTransaction, PLAYER_SECRET, CONNECTION } from "./test"
   //console.log(await getHeroState(CONNECTION, player.publicKey));
   // PERFORM ACITON
   console.log(await getGameState(CONNECTION, player.publicKey));
-  var transaction = await performAction(CONNECTION, player.publicKey, 0);
-  await sendTransaction(transaction, player);
-  let gameState = await getGameState(CONNECTION, player.publicKey);
-  console.log(await getGameState(CONNECTION, player.publicKey));
+  //var transaction = await performAction(CONNECTION, player.publicKey, 0);
+  //await sendTransaction(transaction, player);
+  //let gameState = await getGameState(CONNECTION, player.publicKey);
+  //console.log(await getGameState(CONNECTION, player.publicKey));
   // DELETE GAME
   //const transaction = await deleteGame(CONNECTION, player.publicKey);
   //await sendTransaction(transaction, player);
