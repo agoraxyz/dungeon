@@ -173,6 +173,16 @@ export default class Level {
     console.log(coords, thingIndex)
   }
 
+  public getNearbyActionIndex(): number | undefined {
+    console.log("getNearbyActionIndex")
+    const coords = this.getNearbyThingCoords()
+    console.log("coords", coords)
+    if (!coords) return undefined
+    const thingIndex = this.getThingByCoords(coords)
+    console.log("thingIndex", thingIndex)
+    if (thingIndex === -1) return undefined
+  }
+
   private move(direction: string) {
     const [r, c] = this.heroCoords
 

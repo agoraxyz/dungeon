@@ -160,6 +160,8 @@ const LevelUi = () => {
       _forceUpdate()
     } else if (e.key === "i") {
       if (!dungeonState) return
+      const index = _level.getNearbyActionIndex()
+      console.log("nearby action index:", index)
       _setActionNum(0)
     } else if (e.key == "f") {
       _level.interact()
