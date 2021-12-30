@@ -29,15 +29,17 @@ export async function deleteGame(connection: Connection, ownerPubkey: PublicKey)
   }
 }
 
-export async function performAction(connection: Connection, ownerPubkey: PublicKey, action_id: number) {
+export async function performAction(connection: Connection, ownerPubkey: PublicKey, actionId: number) {
   const { performActionWasm } = await import("../../wasm-factory")
 
   const performActionArgs = new PerformActionArgs({
     heroOwnerPubkey: ownerPubkey,
-    action_id: action_id
+    actionId,
   })
+  const serialized_args = serialize(SCHEMA, performActionArgs)
+  const serialized_instruction = performActionWasm(serialized_args)
   try {
-    const instruction = parseInstruction(performActionWasm(serialize(SCHEMA, performActionArgs)))
+    const instruction = parseInstruction(serialized_instruction)
     return new Transaction().add(instruction)
   } catch (e) {
     console.log("wasm error:", e)
