@@ -5,7 +5,7 @@ import { ClickDungeon, Dungeon } from "components/index/dungeon"
 import { useState } from "react"
 
 const Page = (): JSX.Element => {
-  const [which, setWhich] = useState<string>("ClickDungeon")
+  const [which, setWhich] = useState<string>("Dungeon")
 
   const changeDungeon = () => {
     if (which === "Dungeon") {
