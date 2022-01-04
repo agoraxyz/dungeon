@@ -1,81 +1,39 @@
+import * as schema from "contract-logic/schema"
 import seedrandom from "seedrandom"
 import Chamber from "./Chamber"
-import * as types from "./types"
 
-const dummyThings: types.DungeonThing[] = [
+const dummyThings: DungeonThing[] = [
   {
+    id: 0,
     type: "dungeonObj",
-    artifact: { att: 1, def: 1, dmg: { min: 1, max: 1 } },
-    extraHealth: 1,
+    kind: "asd",
   },
   {
+    id: 1,
     type: "guarded",
     passage: true,
     guard: {
+      id: 1,
       type: "creature",
-      kind: types.CreatureType.Medusa,
-      attr: {
-        attack: 1,
-        defense: 1,
-        hitpoints: 1,
-        damage: { min: 1, max: 1 },
-      },
-      health: 1,
-      size: 1,
+      kind: "skeleton",
     },
   },
   {
+    id: 2,
     type: "creature",
-    kind: types.CreatureType.Skeleton,
-    attr: {
-      attack: 1,
-      defense: 1,
-      hitpoints: 1,
-      damage: { min: 1, max: 1 },
-    },
-    health: 1,
-    size: 1,
+    kind: "skeleton",
   },
   {
+    id: 3,
     type: "guarded",
     ladder: true,
     guard: {
+      id: 3,
       type: "creature",
-      kind: types.CreatureType.Medusa,
-      attr: {
-        attack: 1,
-        defense: 1,
-        hitpoints: 1,
-        damage: { min: 1, max: 1 },
-      },
-      health: 1,
-      size: 1,
+      kind: "skeleton",
     },
   },
 ]
-
-const dummyThings2: types.DungeonThing[] = [
-  {
-    type: "guarded",
-    passage: true,
-    guard: {
-      type: "creature",
-      kind: types.CreatureType.Medusa,
-      attr: {
-        attack: 1,
-        defense: 1,
-        hitpoints: 1,
-        damage: { min: 1, max: 1 },
-      },
-      health: 1,
-      size: 1,
-    },
-  },
-]
-
-// TODO place stuff in addChamber
-// TODO place guarded with passage in generated passage
-// TODO place other guardeds in a carved out box
 
 export type Map = string[][][]
 
@@ -95,6 +53,91 @@ type ThingOnMap = {
   col: number
 }
 
+type DungeonThing = DungeonObj | Creature | Guarded
+
+type DungeonObj = {
+  id: number
+  type: "dungeonObj"
+  kind: string
+}
+
+type Guarded = {
+  id: number
+  type: "guarded"
+  chamberObj?: DungeonObj
+  passage?: boolean
+  ladder?: boolean
+  guard: Creature
+}
+
+type Creature = {
+  id: number
+  type: "creature"
+  kind: string
+}
+
+const dungeonStateToThings = (state: schema.DungeonState): DungeonThing[] => {
+  const asd: DungeonThing[] = []
+  state.actionSpace.forEach((action, id) => {
+    if (action.actionLadder) {
+      asd.push({
+        id,
+        type: "dungeonObj",
+        kind: "ladder",
+      })
+    } else if (action.actionInteract) {
+      asd.push({
+        id,
+        type: "dungeonObj",
+        kind: action.actionInteract.unnamed_0.enum,
+      })
+    } else if (action.actionAttack) {
+      const creature = action.actionAttack.unnamed_0
+      const guard: Creature = {
+        id: id,
+        type: "creature",
+        kind: creature.creature.enum,
+      }
+      if (creature.guarded) {
+        const guarded = creature.guarded
+        if (guarded.guardedLadder) {
+          const chamberObj: DungeonObj = {
+            id: id,
+            type: "dungeonObj",
+            kind: "ladder",
+          }
+          asd.push({
+            id,
+            type: "guarded",
+            guard,
+            chamberObj,
+          })
+        } else if (guarded.guardedObj) {
+          const chamberObj: DungeonObj = {
+            id: id,
+            type: "dungeonObj",
+            kind: guarded.guardedObj.unnamed_0.enum,
+          }
+          asd.push({
+            id,
+            type: "guarded",
+            guard,
+            chamberObj,
+          })
+        } else if (guarded.guardedPassage) {
+          asd.push({
+            id,
+            type: "guarded",
+            guard,
+            passage: true,
+          })
+        }
+      }
+    }
+  })
+  return asd
+}
+
 const C_INIT_HEIGHT = 3
 const C_INIT_WIDTH = 3
 const C_SCALE = 4
@@ -110,7 +153,7 @@ export default class Level {
   private heroCoords: Coords
   private entranceCoords: Coords
   private thingsOnMap: ThingOnMap[] = []
-  private dungeonThings: types.DungeonThing[] = []
+  private dungeonThings: DungeonThing[] = []
 
   constructor() {
     this.rand = seedrandom("hello")
@@ -120,7 +163,7 @@ export default class Level {
     this.chambers = []
 
     // this.createFirstChamber()
-    this.addChamber(dummyThings)
+    // this.addChamber(dummyThings)
     // this.addChamber(dummyThings)
     // this.addChamber(dummyThings)
     // this.addChamber(dummyThings)
@@ -183,6 +226,12 @@ export default class Level {
     if (thingIndex === -1) return undefined
   }
 
+  public updateMap(state: schema.DungeonState) {
+    console.log("updating map")
+    const things = dungeonStateToThings(state)
+    this.addChamber(things)
+  }
+
   private move(direction: string) {
     const [r, c] = this.heroCoords
 
@@ -233,7 +282,7 @@ export default class Level {
     }
   }
 
-  private addChamber(things: types.DungeonThing[] = []) {
+  private addChamber(things: DungeonThing[] = []) {
     const passages: Passage[] = []
     let startRow: number, startCol: number
     const isFirstChamber = this.chambers.length === 0
@@ -346,12 +395,12 @@ export default class Level {
   }
 
   private addThings(
-    things: types.DungeonThing[],
+    things: DungeonThing[],
     startRow: number,
     startCol: number,
     nextPassageCoords?: Coords
   ) {
-    const _things: types.DungeonThing[] = JSON.parse(JSON.stringify(things))
+    const _things: DungeonThing[] = JSON.parse(JSON.stringify(things))
 
     // add the passage guard first because it has to have a fixed location
     if (nextPassageCoords) {
@@ -515,7 +564,7 @@ export default class Level {
     }
   }
 
-  private guardsPassage(things: types.DungeonThing[]) {
+  private guardsPassage(things: DungeonThing[]) {
     for (const thing of things) {
       if (thing.type === "guarded" && thing.passage) {
         return true

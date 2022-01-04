@@ -166,6 +166,9 @@ const LevelUi = () => {
     } else if (e.key == "f") {
       _level.interact()
       _forceUpdate()
+    } else if (e.key === "b") {
+      _level.updateMap(dungeonState)
+      _forceUpdate()
     }
   }
 
