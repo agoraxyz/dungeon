@@ -48,6 +48,7 @@ type ChamberParams = {
 }
 
 type ThingOnMap = {
+  id: number
   name: string
   row: number
   col: number
@@ -195,7 +196,7 @@ export default class Level {
     console.log("interact")
     const coords = this.getNearbyThingCoords()
     if (!coords) return
-    const thingIndex = this.getThingByCoords(coords)
+    const thingIndex = this.getThingIdByCoords(coords)
     if (thingIndex === -1) return
 
     const thingOnMap = this.thingsOnMap[thingIndex]
@@ -221,15 +222,24 @@ export default class Level {
     const coords = this.getNearbyThingCoords()
     console.log("coords", coords)
     if (!coords) return undefined
-    const thingIndex = this.getThingByCoords(coords)
+    const thingIndex = this.getThingIdByCoords(coords)
     console.log("thingIndex", thingIndex)
     if (thingIndex === -1) return undefined
+    return thingIndex
   }
 
   public updateMap(state: schema.DungeonState) {
     console.log("updating map")
-    const things = dungeonStateToThings(state)
-    this.addChamber(things)
+    const newThings = dungeonStateToThings(state)
+    if (this.dungeonThings.length === 0) {
+      this.addChamber(newThings)
+      return
+    }
+    // loop through schema dungeon state actions
+    // if id found in existing things, remove from newThings,
+    // and remove from map
+
+    // put call addChamber with remaining newThings
   }
 
   private move(direction: string) {
@@ -406,14 +416,15 @@ export default class Level {
     if (nextPassageCoords) {
       const guardIndex = _things.findIndex((t) => t.type === "guarded" && t.passage)
       this.dungeonThings.push(_things[guardIndex])
-      _things.splice(guardIndex, 1)
       const [row, col] = nextPassageCoords
       this._map[row + startRow][col + startCol].push("creature")
       this.thingsOnMap.push({
+        id: _things[guardIndex].id,
         row: row + startRow,
         col: col + startCol,
         name: "creature",
       })
+      _things.splice(guardIndex, 1)
     }
 
     for (const thing of _things) {
@@ -430,6 +441,7 @@ export default class Level {
           const name = thing.type === "dungeonObj" ? "obj" : "creature"
           this._map[row][col].push(name)
           this.thingsOnMap.push({
+            id: thing.id,
             row,
             col,
             name,
@@ -456,6 +468,7 @@ export default class Level {
           const cell = this._map[row][col]
           cell.push("creature")
           this.thingsOnMap.push({
+            id: thing.id,
             row,
             col,
             name: "creature",
@@ -466,6 +479,7 @@ export default class Level {
           wall.pop()
           wall.push(guardedName)
           this.thingsOnMap.push({
+            id: thing.id,
             row: wallRow,
             col: wallCol,
             name: guardedName,
@@ -527,12 +541,10 @@ export default class Level {
     }
   }
 
-  private getThingByCoords(coords: Coords): number {
+  private getThingIdByCoords(coords: Coords): number {
     const [row, col] = coords
-    const index = this.thingsOnMap.findIndex(
-      (val) => val.row === row && val.col === col
-    )
-    return index
+    const thing = this.thingsOnMap.find((val) => val.row === row && val.col === col)
+    return thing.id
   }
 
   private getWallCordsIfNextToWall(row: number, col: number) {

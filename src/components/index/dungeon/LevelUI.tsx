@@ -65,8 +65,11 @@ const LevelUi = () => {
     if (state === undefined) {
       console.log("game not initialized")
       setDungeonState(undefined)
+      return
     }
     setDungeonState(state)
+    _level.updateMap(state)
+    _forceUpdate()
   }
 
   const fetchGameState = async () => {
@@ -162,7 +165,7 @@ const LevelUi = () => {
       if (!dungeonState) return
       const index = _level.getNearbyActionIndex()
       console.log("nearby action index:", index)
-      _setActionNum(0)
+      _setActionNum(index)
     } else if (e.key == "f") {
       _level.interact()
       _forceUpdate()
