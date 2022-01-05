@@ -133,6 +133,7 @@ const LevelUi = () => {
     const key = _actionNum
     if (key === undefined) return <Box>nothing selected</Box>
     const action = dungeonState.actionSpace.get(key)
+    if (action === undefined) return <Box>nothing selected</Box>
     return (
       <Box key={key} display="flex" flexDir="column" alignItems="center">
         {/* <Image src={`/creatures/1.png`} alt="asd" /> */}
@@ -167,8 +168,9 @@ const LevelUi = () => {
       console.log("nearby action index:", index)
       _setActionNum(index)
     } else if (e.key == "f") {
-      _level.interact()
-      _forceUpdate()
+      const index = _level.getNearbyActionIndex()
+      if (index === undefined) return
+      performAction(index)
     } else if (e.key === "b") {
       _level.updateMap(dungeonState)
       _forceUpdate()

@@ -52,6 +52,7 @@ type ThingOnMap = {
   name: string
   row: number
   col: number
+  hide: boolean
 }
 
 type DungeonThing = DungeonObj | Creature | Guarded
@@ -158,7 +159,7 @@ export default class Level {
 
   constructor() {
     this.rand = seedrandom("hello")
-    this.rows = 100
+    this.rows = 150
     this.cols = 30
     this.makeMap()
     this.chambers = []
@@ -192,31 +193,6 @@ export default class Level {
     this.move("east")
   }
 
-  public interact() {
-    console.log("interact")
-    const coords = this.getNearbyThingCoords()
-    if (!coords) return
-    const thingIndex = this.getThingIdByCoords(coords)
-    if (thingIndex === -1) return
-
-    const thingOnMap = this.thingsOnMap[thingIndex]
-    const thing = this.dungeonThings[thingIndex]
-    if (thing.type === "creature") {
-      console.log("creature")
-    } else if (thing.type === "dungeonObj") {
-      console.log("dungeonObj")
-    } else if (thing.type === "guarded") {
-      console.log("guarded")
-      console.log("thing", thing)
-      if (!thing.passage) return
-      this.addChamber(dummyThings)
-      this.thingsOnMap.splice(thingIndex, 1)
-      this.dungeonThings.splice(thingIndex, 1)
-      this._map[thingOnMap.row][thingOnMap.col] = []
-    }
-    console.log(coords, thingIndex)
-  }
-
   public getNearbyActionIndex(): number | undefined {
     console.log("getNearbyActionIndex")
     const coords = this.getNearbyThingCoords()
@@ -230,16 +206,70 @@ export default class Level {
 
   public updateMap(state: schema.DungeonState) {
     console.log("updating map")
-    const newThings = dungeonStateToThings(state)
+    const inputThings = dungeonStateToThings(state)
+    const newThings: DungeonThing[] = []
     if (this.dungeonThings.length === 0) {
-      this.addChamber(newThings)
+      this.addChamber(inputThings)
+      console.log("actions", state.actionSpace)
+      console.log("added first chamber", this.dungeonThings)
+      console.log(
+        "input:",
+        inputThings.length,
+        "dungeon:",
+        this.dungeonThings.length
+      )
       return
     }
+
     // loop through schema dungeon state actions
-    // if id found in existing things, remove from newThings,
-    // and remove from map
+    state.actionSpace.forEach((action, id) => {
+      const existingThings = this.dungeonThings.filter((val) => val.id === id)
+      if (existingThings.length > 1) {
+        console.log(this.dungeonThings)
+        console.log("*************")
+        console.log(existingThings)
+        throw new Error("too many things")
+      }
+
+      if (existingThings.length === 0) {
+        newThings.push(...inputThings.filter((thing) => thing.id === id))
+        return
+      }
+
+      const existingThing = existingThings[0]
+      // if guard was killed hide it on map
+      if (existingThing.type === "guarded" && !action.actionAttack) {
+        const thingsOnMap = this.thingsOnMap.filter((val) => val.id === id)
+        if (thingsOnMap.length !== 2) throw Error("not 2 things on map")
+        const guard = thingsOnMap[0]
+        if (!guard.hide) {
+          guard.hide = true
+          this._map[guard.row][guard.col] = []
+        }
+      }
+    })
+
+    // loop through existing things and hide if not in new state
+    for (const i in this.thingsOnMap) {
+      const thingOnMap = this.thingsOnMap[i]
+      const stateIds = []
+      state.actionSpace.forEach((_, k) => stateIds.push(k))
+
+      if (!stateIds.includes(thingOnMap.id)) {
+        if (!thingOnMap.hide) {
+          thingOnMap.hide = true
+          this._map[thingOnMap.row][thingOnMap.col] = []
+        }
+      }
+    }
 
     // put call addChamber with remaining newThings
+    if (newThings.length > 0) {
+      this.addChamber(newThings)
+    }
+    console.log("actions", state.actionSpace)
+    console.log("dungeonThings", this.dungeonThings)
+    console.log("thingsOnMap", this.thingsOnMap)
   }
 
   private move(direction: string) {
@@ -423,6 +453,7 @@ export default class Level {
         row: row + startRow,
         col: col + startCol,
         name: "creature",
+        hide: false,
       })
       _things.splice(guardIndex, 1)
     }
@@ -445,6 +476,7 @@ export default class Level {
             row,
             col,
             name,
+            hide: false,
           })
           this.dungeonThings.push(thing)
           break
@@ -472,6 +504,7 @@ export default class Level {
             row,
             col,
             name: "creature",
+            hide: false,
           })
           this.dungeonThings.push(thing)
 
@@ -483,8 +516,10 @@ export default class Level {
             row: wallRow,
             col: wallCol,
             name: guardedName,
+            hide: false,
           })
-          this.dungeonThings.push(thing)
+          // should only have one dungeonThing but two thingsOnMap
+          // this.dungeonThings.push(thing)
           break
         }
       }
@@ -544,6 +579,7 @@ export default class Level {
   private getThingIdByCoords(coords: Coords): number {
     const [row, col] = coords
     const thing = this.thingsOnMap.find((val) => val.row === row && val.col === col)
+    if (!thing) return -1
     return thing.id
   }
 
