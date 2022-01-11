@@ -29,7 +29,7 @@ module.exports = withTM({
     if (!process.env.IS_VERCEL) {
       config.plugins.push(
         new WasmPackPlugin({
-          crateDirectory: resolve("./zgen-solana/zgsol-dungeon-client"),
+          crateDirectory: resolve("./rust/client"),
           args: "--log-level warn",
           outDir: "../../wasm-factory",
           outName: "instructions",
